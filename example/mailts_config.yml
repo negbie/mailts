@@ -1,0 +1,33 @@
+query:
+- output:
+    csv:
+    - filename: mailts_{DATETIME}.csv
+      mail: true
+      temporary: false
+    xls:
+    - filename: mailts_{DATETIME}.xlsx
+      sheetname: sheet_{DATE}
+      mail: true
+      temporary: false
+  email:
+    server: localhost:25
+    from: from@localhost.localdomain
+    subject: ""
+    body: ""
+    to:
+    - to@localhost.localdomain
+    cc:
+    - cc1@localhost.localdomain
+    - cc2@localhost.localdomain
+    - cc3@localhost.localdomain
+  connection:
+    driver: postgres
+    host: localhost
+    port: 5432
+    database: vmess
+    user: root
+    password: root
+  header:
+  - "time,duration"
+  delimiter: ","
+  statement: "select time,duration from ngcp_cdr;"

@@ -1,2 +1,2 @@
-# tsmail
-Send timeseries reports per mail
+# mailts
+Send timeseries reports per email
