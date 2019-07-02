@@ -21,16 +21,14 @@ report:
     - cc2@localhost.localdomain
     - cc3@localhost.localdomain
   connection:
-    driver: postgres
+    type: postgres
     host: localhost
     port: 5432
-    database: vmess
     user: root
     password: root
+    database: vmess
   header:
   - "time,duration"
   delimiter: ","
   query: "select time,duration from ngcp_cdr;"
 
-
-  

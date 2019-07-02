@@ -14,13 +14,12 @@ type Telegram struct {
 }
 
 type Report struct {
-	Output     *Output    `json:"output"`
-	Email      *Email     `json:"email"`
-	Connection Connection `json:"connection"`
-	Range      *Range     `json:"range"`
-	Header     []string   `json:"header"`
-	Delimiter  string     `json:"delimiter"`
-	Query      string     `json:"query"`
+	Output     *Output     `json:"output"`
+	Email      *Email      `json:"email"`
+	Connection *Connection `json:"connection"`
+	Header     []string    `json:"header"`
+	Delimiter  string      `json:"delimiter"`
+	Query      string      `json:"query"`
 }
 
 type Output struct {
@@ -60,18 +59,16 @@ type Email struct {
 }
 
 type Connection struct {
-	Driver   string `json:"driver"`
+	Type     string `json:"type"`
 	Host     string `json:"host"`
 	Port     string `json:"port"`
-	Database string `json:"database"`
 	User     string `json:"user"`
 	Password string `json:"password"`
-}
-
-type Range struct {
-	Start string `json:"start"`
-	End   string `json:"end"`
-	Step  string `json:"step"`
+	Database string `json:"database"`
+	URL      string `json:"url"`
+	Start    string `json:"start"`
+	End      string `json:"end"`
+	Step     string `json:"step"`
 }
 
 func loadConfig(filename string) (*Telegram, error) {

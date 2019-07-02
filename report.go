@@ -10,24 +10,24 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type InputData struct {
+type Data struct {
 	values map[string]interface{}
 }
 
-func createReport(report *Report, done chan<- struct{}, writer chan<- WriterData) {
+func doReport(report *Report, done chan<- struct{}, writer chan<- WriterData) {
 	defer func() { done <- struct{}{} }()
 
-	procdone := make(chan struct{}, 1)
-	procinput := make(chan InputData, 1)
-	if report.Connection.Driver == "prometheus" {
-		//go queryTS(report, procdone, writer, procinput)
+	qd := make(chan struct{}, 1)
+	qi := make(chan Data, 1)
+	if report.Connection.Type == "prometheus" {
+		//go queryTS(report, qd, writer, procinput)
 	} else {
-		go queryDB(report, procdone, writer, procinput)
+		go queryDB(report, qd, writer, qi)
 	}
 
-	procinput <- InputData{}
-	close(procinput)
-	<-procdone
+	qi <- Data{}
+	close(qi)
+	<-qd
 
 	flushFiles(report)
 	sendEmails(report)
@@ -51,7 +51,7 @@ func createReport(report *Report, done chan<- struct{}, writer chan<- WriterData
 	}
 }
 
-func queryDB(report *Report, done chan<- struct{}, writer chan<- WriterData, input <-chan InputData) {
+func queryDB(report *Report, done chan<- struct{}, writer chan<- WriterData, input <-chan Data) {
 	defer func() { done <- struct{}{} }()
 
 	connstr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -61,7 +61,7 @@ func queryDB(report *Report, done chan<- struct{}, writer chan<- WriterData, inp
 		report.Connection.Password,
 		report.Connection.Database,
 	)
-	db, err := sqlx.Connect(report.Connection.Driver, connstr)
+	db, err := sqlx.Connect(report.Connection.Type, connstr)
 	if err != nil {
 		glog.Errorf("can't connect to [%v]", connstr)
 		return
@@ -119,10 +119,10 @@ func queryDB(report *Report, done chan<- struct{}, writer chan<- WriterData, inp
 					writer <- WriterData{
 						Header: report.Header,
 						Data:   data,
-						Flush:  csvLineCount >= 20,
+						Flush:  csvLineCount >= 50,
 						Writer: csv.Writer,
 					}
-					if csvLineCount >= 20 {
+					if csvLineCount >= 50 {
 						csvLineCount = 0
 					}
 					csvLineCount++
@@ -131,10 +131,10 @@ func queryDB(report *Report, done chan<- struct{}, writer chan<- WriterData, inp
 					writer <- WriterData{
 						Header: report.Header,
 						Data:   data,
-						Flush:  xlsLinecount >= 20,
+						Flush:  xlsLinecount >= 50,
 						Writer: xls.Writer,
 					}
-					if xlsLinecount >= 20 {
+					if xlsLinecount >= 50 {
 						xlsLinecount = 0
 					}
 					xlsLinecount++

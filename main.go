@@ -53,7 +53,7 @@ func report(configFile string) {
 	reportWorkersDone := make(chan struct{}, reportWorkers)
 
 	for i := 0; i < reportWorkers; i++ {
-		go createReport(&config.Report[i], reportWorkersDone, input)
+		go doReport(&config.Report[i], reportWorkersDone, input)
 	}
 
 	for i := 0; i < reportWorkers; i++ {
