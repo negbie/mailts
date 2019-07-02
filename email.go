@@ -12,26 +12,26 @@ import (
 	"github.com/golang/glog"
 )
 
-func sendEmails(query *Query) {
+func sendEmails(report *Report) {
 	var attachments []string
-	if query.Output != nil {
-		for _, csv := range query.Output.Csv {
+	if report.Output != nil {
+		for _, csv := range report.Output.Csv {
 			if csv.Mail {
 				attachments = append(attachments, csv.Filename)
 			}
 		}
-		for _, xls := range query.Output.Xls {
+		for _, xls := range report.Output.Xls {
 			if xls.Mail {
 				attachments = append(attachments, xls.Filename)
 			}
 		}
 	}
 	if len(attachments) > 0 {
-		sendEmail(query, attachments)
+		sendEmail(report, attachments)
 	}
 }
 
-func sendEmail(query *Query, attachments []string) {
+func sendEmail(report *Report, attachments []string) {
 	var (
 		server, from  string
 		subject, body string
@@ -40,20 +40,20 @@ func sendEmail(query *Query, attachments []string) {
 		boundary      = "__MAIL_TS_"
 	)
 
-	if server = query.Email.Server; server == "" {
+	if server = report.Email.Server; server == "" {
 		server = "localhost:25"
 	}
-	if from = query.Email.From; from == "" {
+	if from = report.Email.From; from == "" {
 		from = "noreply@localhost.localdomain"
 	}
-	if to = query.Email.To; len(to) == 0 {
+	if to = report.Email.To; len(to) == 0 {
 		to = []string{"to@localhost.localdomain"}
 	}
-	cc = query.Email.Cc
-	if subject = query.Email.Subject; subject == "" {
+	cc = report.Email.Cc
+	if subject = report.Email.Subject; subject == "" {
 		subject = "Mail TS - " + time.Now().Format(`20060102150405`)
 	}
-	if body = query.Email.Body; body == "" {
+	if body = report.Email.Body; body == "" {
 		body = "Hi,\r\n\r\nhere is your requested timeseries report!\r\n\r\nBr\r\nMail TS"
 	}
 

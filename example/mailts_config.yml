@@ -1,4 +1,4 @@
-query:
+report:
 - output:
     csv:
     - filename: mailts_{DATETIME}.csv
@@ -30,4 +30,7 @@ query:
   header:
   - "time,duration"
   delimiter: ","
-  statement: "select time,duration from ngcp_cdr;"
+  query: "select time,duration from ngcp_cdr;"
+
+
+  

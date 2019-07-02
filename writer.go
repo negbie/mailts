@@ -28,8 +28,8 @@ func appendRow(header []string, data map[string]interface{}) (r Row) {
 	return
 }
 
-func WriterRoutine(done chan<- interface{}, input <-chan WriterData) {
-	defer func() { done <- nil }()
+func WriterRoutine(done chan<- struct{}, input <-chan WriterData) {
+	defer func() { done <- struct{}{} }()
 
 	for in := range input {
 		if err := in.Writer.Print(in.Header, in.Data); err != nil {
@@ -44,23 +44,23 @@ func WriterRoutine(done chan<- interface{}, input <-chan WriterData) {
 	}
 }
 
-func flushFiles(query *Query) {
-	if query.Output != nil {
-		for _, csv := range query.Output.Csv {
+func flushFiles(report *Report) {
+	if report.Output != nil {
+		for _, csv := range report.Output.Csv {
 			csv.Writer.Flush()
 		}
-		for _, xls := range query.Output.Xls {
+		for _, xls := range report.Output.Xls {
 			xls.Writer.Flush()
 		}
 	}
 }
 
-func closeFiles(query *Query) {
-	if query.Output != nil {
-		for _, csv := range query.Output.Csv {
+func closeFiles(report *Report) {
+	if report.Output != nil {
+		for _, csv := range report.Output.Csv {
 			csv.Writer.Close()
 		}
-		for _, xls := range query.Output.Xls {
+		for _, xls := range report.Output.Xls {
 			xls.Writer.Close()
 		}
 	}

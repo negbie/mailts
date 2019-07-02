@@ -45,15 +45,15 @@ func report(configFile string) {
 		log.Fatalln(err)
 	}
 
-	writerDone := make(chan interface{}, 1)
+	writerDone := make(chan struct{}, 1)
 	input := make(chan WriterData, 2000)
 	go WriterRoutine(writerDone, input)
 
-	reportWorkers := len(config.Query)
-	reportWorkersDone := make(chan interface{}, reportWorkers)
+	reportWorkers := len(config.Report)
+	reportWorkersDone := make(chan struct{}, reportWorkers)
 
 	for i := 0; i < reportWorkers; i++ {
-		go createReport(&config.Query[i], reportWorkersDone, input)
+		go createReport(&config.Report[i], reportWorkersDone, input)
 	}
 
 	for i := 0; i < reportWorkers; i++ {

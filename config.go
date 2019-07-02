@@ -9,18 +9,18 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Report struct {
-	Query []Query `json:"query"`
+type Telegram struct {
+	Report []Report `json:"report"`
 }
 
-type Query struct {
+type Report struct {
 	Output     *Output    `json:"output"`
 	Email      *Email     `json:"email"`
 	Connection Connection `json:"connection"`
 	Range      *Range     `json:"range"`
 	Header     []string   `json:"header"`
 	Delimiter  string     `json:"delimiter"`
-	Statement  string     `json:"statement"`
+	Query      string     `json:"query"`
 }
 
 type Output struct {
@@ -69,57 +69,54 @@ type Connection struct {
 }
 
 type Range struct {
-	Start        int64  `json:"start"`
-	Stepsize     int64  `json:"stepsize"`
-	Steps        int64  `json:"steps"`
-	Parallel     int    `json:"parallel"`
-	BindvarStart string `json:"bindvar_start"`
-	BindvarEnd   string `json:"bindvar_end"`
+	Start string `json:"start"`
+	End   string `json:"end"`
+	Step  string `json:"step"`
 }
 
-func loadConfig(filename string) (*Report, error) {
+func loadConfig(filename string) (*Telegram, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	var config Report
+	var config Telegram
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		return nil, err
 	}
 
-	for c, query := range config.Query {
-		if len(query.Delimiter) == 0 {
-			query.Delimiter = ","
+	for c, report := range config.Report {
+		if len(report.Delimiter) == 0 {
+			report.Delimiter = ","
 		}
-		delimiter, _ := utf8.DecodeRuneInString(query.Delimiter)
+		delimiter, _ := utf8.DecodeRuneInString(report.Delimiter)
 
-		if len(query.Header) > 0 {
-			config.Query[c].Header = strings.Split(sanitizeHeader(query.Header[0]), string(delimiter))
+		if len(report.Header) > 0 {
+			config.Report[c].Header = strings.Split(sanitizeHeader(report.Header[0]), string(delimiter))
 		}
 
-		if query.Output != nil {
-			for _, screen := range query.Output.Screen {
+		if report.Output != nil {
+			for _, screen := range report.Output.Screen {
 				if strings.ToUpper(screen.Filename) == "STDERR" {
 					screen.Writer = newStdErrWriter(delimiter)
 				} else {
 					screen.Writer = newStdOutWriter(delimiter)
 				}
 			}
-			for _, csv := range query.Output.Csv {
+			for _, csv := range report.Output.Csv {
 				csv.Filename = replaceTemplate(csv.Filename)
 				csv.Writer = newCsvWriter(csv.Filename, delimiter)
 			}
-			for _, xls := range query.Output.Xls {
+			for _, xls := range report.Output.Xls {
 				xls.Sheetname = replaceTemplate(xls.Sheetname)
 				xls.Filename = replaceTemplate(xls.Filename)
-				xls.Writer = newXlsWriter(xls.Filename, xls.Sheetname, config.Query[c].Header)
+				xls.Writer = newXlsWriter(xls.Filename, xls.Sheetname, config.Report[c].Header)
 			}
 		}
 
-		if query.Email == nil {
-			config.Query[c].Email = &Email{}
+		if report.Email == nil {
+			config.Report[c].Email = &Email{}
 		}
 	}
 

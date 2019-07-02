@@ -10,82 +10,38 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func createReport(query *Query, done chan<- interface{}, writer chan<- WriterData) {
-	defer func() { done <- nil }()
+type InputData struct {
+	values map[string]interface{}
+}
 
-	connstr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		query.Connection.Host,
-		query.Connection.Port,
-		query.Connection.User,
-		query.Connection.Password,
-		query.Connection.Database,
-	)
-	db, err := sqlx.Connect(query.Connection.Driver, connstr)
-	if err != nil {
-		glog.Errorf("can't connect to [%v]", connstr)
-		return
-	}
-	defer db.Close()
+func createReport(report *Report, done chan<- struct{}, writer chan<- WriterData) {
+	defer func() { done <- struct{}{} }()
 
-	if query.Range != nil {
-		// parallel queries
-		var bindvars map[string]interface{} = make(map[string]interface{})
-		rangeStart := query.Range.Start
-		rangeEnd := rangeStart + query.Range.Stepsize - 1
-		rangeMax := rangeStart + (query.Range.Stepsize * query.Range.Steps)
-
-		procdone := make(chan interface{}, query.Range.Parallel)
-		procinput := make(chan InputData, query.Range.Parallel)
-
-		// start parallel processes
-		for p := 0; p < query.Range.Parallel; p++ {
-			go process(query, db, procdone, writer, procinput)
-		}
-
-		for {
-			if rangeEnd > rangeMax {
-				rangeEnd = rangeMax
-			}
-
-			bindvars[query.Range.BindvarStart] = rangeStart
-			bindvars[query.Range.BindvarEnd] = rangeEnd
-
-			procinput <- InputData{bindvars}
-
-			if rangeEnd >= rangeMax {
-				break
-			}
-			rangeStart = rangeEnd + 1
-			rangeEnd = rangeStart + query.Range.Stepsize - 1
-		}
-		close(procinput)
-
-		for p := 0; p < query.Range.Parallel; p++ {
-			<-procdone
-		}
-
+	procdone := make(chan struct{}, 1)
+	procinput := make(chan InputData, 1)
+	if report.Connection.Driver == "prometheus" {
+		//go queryTS(report, procdone, writer, procinput)
 	} else {
-		procdone := make(chan interface{}, 1)
-		procinput := make(chan InputData, 1)
-		go process(query, db, procdone, writer, procinput)
-		procinput <- InputData{}
-		close(procinput)
-		<-procdone
+		go queryDB(report, procdone, writer, procinput)
 	}
 
-	flushFiles(query)
-	sendEmails(query)
-	closeFiles(query)
+	procinput <- InputData{}
+	close(procinput)
+	<-procdone
 
-	if query.Output != nil {
-		for _, csv := range query.Output.Csv {
+	flushFiles(report)
+	sendEmails(report)
+	closeFiles(report)
+
+	if report.Output != nil {
+		for _, csv := range report.Output.Csv {
 			if csv.Temporary {
 				if err := os.Remove(csv.Filename); err != nil {
 					glog.Error(err)
 				}
 			}
 		}
-		for _, xls := range query.Output.Xls {
+		for _, xls := range report.Output.Xls {
 			if xls.Temporary {
 				if err := os.Remove(xls.Filename); err != nil {
 					glog.Error(err)
@@ -95,29 +51,39 @@ func createReport(query *Query, done chan<- interface{}, writer chan<- WriterDat
 	}
 }
 
-type InputData struct {
-	Bindvars map[string]interface{}
-}
+func queryDB(report *Report, done chan<- struct{}, writer chan<- WriterData, input <-chan InputData) {
+	defer func() { done <- struct{}{} }()
 
-func process(query *Query, db *sqlx.DB, done chan<- interface{}, writer chan<- WriterData, input <-chan InputData) {
-	defer func() { done <- nil }()
+	connstr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		report.Connection.Host,
+		report.Connection.Port,
+		report.Connection.User,
+		report.Connection.Password,
+		report.Connection.Database,
+	)
+	db, err := sqlx.Connect(report.Connection.Driver, connstr)
+	if err != nil {
+		glog.Errorf("can't connect to [%v]", connstr)
+		return
+	}
+	defer db.Close()
 
 	var withHeader bool
-	if len(query.Header) > 0 {
+	if len(report.Header) > 0 {
 		withHeader = true
 	}
 
 	for in := range input {
-		stmt, err := db.PrepareNamed(query.Statement)
+		stmt, err := db.PrepareNamed(report.Query)
 		if err != nil {
-			glog.Errorf("can't prepare statement [%v]", query.Statement)
+			glog.Errorf("can't prepare query [%v]", report.Query)
 			continue
 		}
 		defer stmt.Close()
 
-		rows, err := stmt.Queryx(in.Bindvars)
+		rows, err := stmt.Queryx(in.values)
 		if err != nil {
-			glog.Errorf("can't execute statement [%v], with bindvars: %v\n", query.Statement, in.Bindvars)
+			glog.Errorf("can't execute query [%v], with values: %v\n", report.Query, in.values)
 			continue
 		}
 		defer rows.Close()
@@ -136,22 +102,22 @@ func process(query *Query, db *sqlx.DB, done chan<- interface{}, writer chan<- W
 				if err != nil {
 					glog.Error(err)
 				}
-				query.Header = header
+				report.Header = header
 				withHeader = true
 			}
 
-			if query.Output != nil {
-				for _, screen := range query.Output.Screen {
+			if report.Output != nil {
+				for _, screen := range report.Output.Screen {
 					writer <- WriterData{
-						Header: query.Header,
+						Header: report.Header,
 						Data:   data,
 						Flush:  false,
 						Writer: screen.Writer,
 					}
 				}
-				for _, csv := range query.Output.Csv {
+				for _, csv := range report.Output.Csv {
 					writer <- WriterData{
-						Header: query.Header,
+						Header: report.Header,
 						Data:   data,
 						Flush:  csvLineCount >= 20,
 						Writer: csv.Writer,
@@ -161,9 +127,9 @@ func process(query *Query, db *sqlx.DB, done chan<- interface{}, writer chan<- W
 					}
 					csvLineCount++
 				}
-				for _, xls := range query.Output.Xls {
+				for _, xls := range report.Output.Xls {
 					writer <- WriterData{
-						Header: query.Header,
+						Header: report.Header,
 						Data:   data,
 						Flush:  xlsLinecount >= 20,
 						Writer: xls.Writer,
@@ -175,7 +141,7 @@ func process(query *Query, db *sqlx.DB, done chan<- interface{}, writer chan<- W
 				}
 			} else {
 				writer <- WriterData{
-					Header: query.Header,
+					Header: report.Header,
 					Data:   data,
 					Flush:  false,
 					Writer: newStdOutWriter(','),
