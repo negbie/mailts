@@ -13,10 +13,10 @@ type CsvWriter struct {
 	*sync.RWMutex
 }
 
-func (w CsvWriter) Print(header []string, data map[string]interface{}) error {
+func (w CsvWriter) Print(header []string, data []string) error {
 	w.RLock()
 	defer w.RUnlock()
-	return w.Out.Write(appendRow(header, data))
+	return w.Out.Write(data)
 }
 
 func (w CsvWriter) Flush() error {

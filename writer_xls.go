@@ -12,10 +12,10 @@ type XlsWriter struct {
 	*sync.RWMutex
 }
 
-func (x XlsWriter) Print(header []string, data map[string]interface{}) error {
+func (x XlsWriter) Print(header []string, data []string) error {
 	x.RLock()
 	defer x.RUnlock()
-	return x.Out.Write(appendRow(header, data))
+	return x.Out.Write(data)
 }
 
 func (x XlsWriter) Flush() error {

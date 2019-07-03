@@ -20,7 +20,7 @@ func doReport(report *Report, done chan<- struct{}, writer chan<- WriterData) {
 	qd := make(chan struct{}, 1)
 	qi := make(chan Data, 1)
 	if report.Connection.Type == "prometheus" {
-		//go queryTS(report, qd, writer, procinput)
+		go queryTS(report, qd, writer, qi)
 	} else {
 		go queryDB(report, qd, writer, qi)
 	}
@@ -91,6 +91,7 @@ func queryDB(report *Report, done chan<- struct{}, writer chan<- WriterData, inp
 		var csvLineCount, xlsLinecount int64
 		for rows.Next() {
 			data := make(map[string]interface{})
+			var row []string
 			err = rows.MapScan(data)
 			if err != nil {
 				glog.Error(err)
@@ -106,11 +107,15 @@ func queryDB(report *Report, done chan<- struct{}, writer chan<- WriterData, inp
 				withHeader = true
 			}
 
+			for _, key := range report.Header {
+				row = append(row, fmt.Sprint(data[key]))
+			}
+
 			if report.Output != nil {
 				for _, screen := range report.Output.Screen {
 					writer <- WriterData{
 						Header: report.Header,
-						Data:   data,
+						Data:   row,
 						Flush:  false,
 						Writer: screen.Writer,
 					}
@@ -118,7 +123,7 @@ func queryDB(report *Report, done chan<- struct{}, writer chan<- WriterData, inp
 				for _, csv := range report.Output.Csv {
 					writer <- WriterData{
 						Header: report.Header,
-						Data:   data,
+						Data:   row,
 						Flush:  csvLineCount >= 50,
 						Writer: csv.Writer,
 					}
@@ -130,7 +135,7 @@ func queryDB(report *Report, done chan<- struct{}, writer chan<- WriterData, inp
 				for _, xls := range report.Output.Xls {
 					writer <- WriterData{
 						Header: report.Header,
-						Data:   data,
+						Data:   row,
 						Flush:  xlsLinecount >= 50,
 						Writer: xls.Writer,
 					}
@@ -142,7 +147,7 @@ func queryDB(report *Report, done chan<- struct{}, writer chan<- WriterData, inp
 			} else {
 				writer <- WriterData{
 					Header: report.Header,
-					Data:   data,
+					Data:   row,
 					Flush:  false,
 					Writer: newStdOutWriter(','),
 				}

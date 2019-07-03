@@ -11,10 +11,10 @@ type ScreenWriter struct {
 	*sync.RWMutex
 }
 
-func (w ScreenWriter) Print(header []string, data map[string]interface{}) error {
+func (w ScreenWriter) Print(header []string, data []string) error {
 	w.RLock()
 	defer w.RUnlock()
-	if err := w.Out.Write(appendRow(header, data)); err != nil {
+	if err := w.Out.Write(data); err != nil {
 		return err
 	}
 	return w.Flush()

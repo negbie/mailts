@@ -9,10 +9,10 @@ import (
 	"github.com/golang/glog"
 )
 
-const version = "0.2"
+const version = "0.4"
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "usage: ./mailts -config example/mailts_config.yml"+
+	fmt.Fprintf(os.Stderr, "usage: ./mailts -config example/mailts-prometheus-config.yml"+
 		" -stderrthreshold=[INFO|WARN|FATAL]"+
 		" -log_dir=./"+
 		" -logtostderr=false\n")
@@ -25,7 +25,7 @@ func main() {
 	var useCron bool
 
 	flag.Usage = usage
-	flag.StringVar(&configFile, "config", "example/mailts_config.yml", "Path to config file")
+	flag.StringVar(&configFile, "config", "example/mailts-prometheus-config.yml", "Path to config file")
 	flag.BoolVar(&useCron, "use_cron", false, "Use Cron")
 	flag.Parse()
 	flag.Lookup("stderrthreshold").Value.Set("INFO")
