@@ -1,14 +1,13 @@
 report:
 - output:
+    screen:
+    - filename: stdout
+      mail: false
+      temporary: true
     csv:
     - filename: mailts_{DATETIME}.csv
       mail: true
-      temporary: false
-    xls:
-    - filename: mailts_{DATETIME}.xlsx
-      sheetname: sheet_{DATE}
-      mail: true
-      temporary: false
+      temporary: true
   email:
     server: localhost:25
     from: from@localhost.localdomain

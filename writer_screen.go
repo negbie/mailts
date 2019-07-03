@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"io"
 	"os"
 	"sync"
 )
@@ -14,10 +15,7 @@ type ScreenWriter struct {
 func (w ScreenWriter) Print(header []string, data []string) error {
 	w.RLock()
 	defer w.RUnlock()
-	if err := w.Out.Write(data); err != nil {
-		return err
-	}
-	return w.Flush()
+	return w.Out.Write(data)
 }
 
 func (w ScreenWriter) Flush() error {
@@ -31,7 +29,7 @@ func (w ScreenWriter) Close() error {
 	return w.Flush()
 }
 
-func newScreenWriter(out *os.File, delimiter rune) *ScreenWriter {
+func newScreenWriter(out io.Writer, delimiter rune) *ScreenWriter {
 	w := csv.NewWriter(out)
 	w.Comma = delimiter
 	return &ScreenWriter{w, new(sync.RWMutex)}
