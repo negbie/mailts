@@ -17,12 +17,12 @@ report:
     - to@localhost.localdomain
     cc:
     - cc1@localhost.localdomain
-  connection:
-    type: postgres
+  database:
+    driver: postgres
     host: localhost
     port: 5432
+    name: vmess
     user: root
     password: root
-    database: vmess
   query: "select time,duration from ngcp_cdr;"
 

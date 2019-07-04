@@ -16,7 +16,8 @@ type Telegram struct {
 type Report struct {
 	Output     *Output     `json:"output"`
 	Email      *Email      `json:"email"`
-	Connection *Connection `json:"connection"`
+	Database   *Database   `json:"database"`
+	Prometheus *Prometheus `json:"prometheus"`
 	Header     []string    `json:"header"`
 	Delimiter  string      `json:"delimiter"`
 	Query      string      `json:"query"`
@@ -58,14 +59,19 @@ type Email struct {
 	Cc      []string `json:"cc"`
 }
 
-type Connection struct {
-	Type     string `json:"type"`
+type Database struct {
+	Driver   string `json:"driver"`
 	Host     string `json:"host"`
 	Port     string `json:"port"`
+	Name     string `json:"name"`
 	User     string `json:"user"`
 	Password string `json:"password"`
-	Database string `json:"database"`
+}
+
+type Prometheus struct {
 	URL      string `json:"url"`
+	User     string `json:"user"`
+	Password string `json:"password"`
 	Start    string `json:"start"`
 	End      string `json:"end"`
 	Step     string `json:"step"`

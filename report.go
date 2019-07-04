@@ -11,10 +11,12 @@ import (
 func doReport(report *Report, done chan<- struct{}, writer chan<- WriterData) {
 	defer func() { done <- struct{}{} }()
 
-	if report.Connection.Type == "prometheus" {
+	if report.Prometheus != nil {
 		queryTS(report, writer)
-	} else {
+	} else if report.Database != nil {
 		queryDB(report, writer)
+	} else {
+		return
 	}
 
 	flushFiles(report)

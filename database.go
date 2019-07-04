@@ -9,13 +9,13 @@ import (
 
 func queryDB(report *Report, writer chan<- WriterData) {
 	connstr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		report.Connection.Host,
-		report.Connection.Port,
-		report.Connection.User,
-		report.Connection.Password,
-		report.Connection.Database,
+		report.Database.Host,
+		report.Database.Port,
+		report.Database.User,
+		report.Database.Password,
+		report.Database.Name,
 	)
-	db, err := sqlx.Connect(report.Connection.Type, connstr)
+	db, err := sqlx.Connect(report.Database.Driver, connstr)
 	if err != nil {
 		glog.Errorf("can't connect to [%v]", connstr)
 		return

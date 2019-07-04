@@ -17,11 +17,10 @@ report:
     - to@localhost.localdomain
     cc:
     - cc1@localhost.localdomain
-  connection:
-    type: prometheus
+  prometheus:
+    url: http://localhost:9090/
     user: admin
     password: admin
-    url: http://localhost:9090/
     start: 1 hour ago
     end: now
     step: 60s

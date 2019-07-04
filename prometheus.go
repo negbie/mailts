@@ -49,25 +49,25 @@ func (v *QueryRangeResponseValue) Value() (float64, error) {
 }
 
 func queryTS(report *Report, writer chan<- WriterData) {
-	start, err := datemaki.Parse(report.Connection.Start)
+	start, err := datemaki.Parse(report.Prometheus.Start)
 	if err != nil {
 		glog.Error(err)
 		return
 	}
 
-	end, err := datemaki.Parse(report.Connection.End)
+	end, err := datemaki.Parse(report.Prometheus.End)
 	if err != nil {
 		glog.Error(err)
 		return
 	}
 
-	step, err := time.ParseDuration(report.Connection.Step)
+	step, err := time.ParseDuration(report.Prometheus.Step)
 	if err != nil {
 		glog.Error(err)
 		return
 	}
 
-	u, err := url.Parse(report.Connection.URL)
+	u, err := url.Parse(report.Prometheus.URL)
 	if err != nil {
 		glog.Error(err)
 		return
@@ -82,9 +82,9 @@ func queryTS(report *Report, writer chan<- WriterData) {
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 
-	if report.Connection.User != "" || report.Connection.Password != "" {
+	if report.Prometheus.User != "" || report.Prometheus.Password != "" {
 		req.Header.Add("Authorization", "Basic "+
-			base64.StdEncoding.EncodeToString([]byte(report.Connection.User+":"+report.Connection.Password)))
+			base64.StdEncoding.EncodeToString([]byte(report.Prometheus.User+":"+report.Prometheus.Password)))
 	}
 
 	if err != nil {

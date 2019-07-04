@@ -17,16 +17,16 @@ type Writer interface {
 	Flush() error
 }
 
-func WriterRoutine(done chan<- struct{}, input <-chan WriterData) {
+func WriterRoutine(done chan<- struct{}, data <-chan WriterData) {
 	defer func() { done <- struct{}{} }()
 
-	for in := range input {
-		if err := in.Writer.Print(in.Header, in.Data); err != nil {
+	for d := range data {
+		if err := d.Writer.Print(d.Header, d.Data); err != nil {
 			glog.Error(err)
 		}
 
-		if in.Flush {
-			if err := in.Writer.Flush(); err != nil {
+		if d.Flush {
+			if err := d.Writer.Flush(); err != nil {
 				glog.Error(err)
 			}
 		}
