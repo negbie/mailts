@@ -8,12 +8,13 @@ import (
 )
 
 func queryDB(report *Report, writer chan<- WriterData) {
-	connstr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+	connstr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		report.Database.Host,
 		report.Database.Port,
 		report.Database.User,
 		report.Database.Password,
 		report.Database.Name,
+		report.Database.SSL,
 	)
 	db, err := sqlx.Connect(report.Database.Driver, connstr)
 	if err != nil {

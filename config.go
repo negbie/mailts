@@ -66,6 +66,7 @@ type Database struct {
 	Name     string `json:"name"`
 	User     string `json:"user"`
 	Password string `json:"password"`
+	SSL      string `json:"ssl"`
 }
 
 type Prometheus struct {

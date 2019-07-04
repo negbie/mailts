@@ -24,5 +24,6 @@ report:
     name: vmess
     user: root
     password: root
+    ssl: disable
   query: "select time,duration from ngcp_cdr;"
 
