@@ -28,7 +28,7 @@ func main() {
 	flag.StringVar(&configFile, "config", "example/mailts-prometheus-config.yml", "Path to config file")
 	flag.BoolVar(&useCron, "use_cron", false, "Use Cron")
 	flag.Parse()
-	flag.Lookup("stderrthreshold").Value.Set("INFO")
+	//flag.Lookup("stderrthreshold").Value.Set("INFO")
 
 	if useCron {
 		// TODO add cron

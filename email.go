@@ -81,8 +81,10 @@ func sendEmail(report *Report, attachments []string) {
 		}
 		encoded := base64.StdEncoding.EncodeToString(content)
 
-		msg.WriteString(fmt.Sprintf("\r\nContent-Type: application/octet-stream; name=\"%s\"\r\nContent-Transfer-Encoding:base64\r\n", attachment))
-		msg.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=\"%s\"\r\n\r\n%s\r\n--%s", attachment, encoded, boundary))
+		msg.WriteString(fmt.Sprintf("\r\nContent-Type: application/octet-stream; name=\"%s\"\r\nContent-Transfer-Encoding:base64\r\n",
+			attachment))
+		msg.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=\"%s\"\r\n\r\n%s\r\n--%s",
+			attachment, encoded, boundary))
 	}
 	msg.WriteString("--")
 

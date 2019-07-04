@@ -17,8 +17,6 @@ report:
     - to@localhost.localdomain
     cc:
     - cc1@localhost.localdomain
-    - cc2@localhost.localdomain
-    - cc3@localhost.localdomain
   connection:
     type: prometheus
     user: admin
@@ -27,8 +25,5 @@ report:
     start: 1 hour ago
     end: now
     step: 60s
-  header:
-  - "time,instance1,instance2,instance3"
-  delimiter: ","
   query: "up"
 

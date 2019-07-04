@@ -1,14 +1,13 @@
 report:
 - output:
+    screen:
+    - filename: stdout
+      mail: false
+      temporary: true
     csv:
     - filename: mailts_{DATETIME}.csv
       mail: true
-      temporary: false
-    xls:
-    - filename: mailts_{DATETIME}.xlsx
-      sheetname: sheet_{DATE}
-      mail: true
-      temporary: false
+      temporary: true
   email:
     server: localhost:25
     from: from@localhost.localdomain
@@ -18,8 +17,6 @@ report:
     - to@localhost.localdomain
     cc:
     - cc1@localhost.localdomain
-    - cc2@localhost.localdomain
-    - cc3@localhost.localdomain
   connection:
     type: postgres
     host: localhost
@@ -27,8 +24,5 @@ report:
     user: root
     password: root
     database: vmess
-  header:
-  - "time,duration"
-  delimiter: ","
   query: "select time,duration from ngcp_cdr;"
 

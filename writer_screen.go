@@ -15,6 +15,9 @@ type ScreenWriter struct {
 func (w ScreenWriter) Print(header []string, data []string) error {
 	w.RLock()
 	defer w.RUnlock()
+	if header != nil {
+		w.Out.Write(header)
+	}
 	return w.Out.Write(data)
 }
 

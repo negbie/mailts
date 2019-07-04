@@ -48,9 +48,7 @@ func (v *QueryRangeResponseValue) Value() (float64, error) {
 	return f, nil
 }
 
-func queryTS(report *Report, done chan<- struct{}, writer chan<- WriterData, input <-chan Data) {
-	defer func() { done <- struct{}{} }()
-
+func queryTS(report *Report, writer chan<- WriterData) {
 	start, err := datemaki.Parse(report.Connection.Start)
 	if err != nil {
 		glog.Error(err)
@@ -171,11 +169,15 @@ func queryTS(report *Report, done chan<- struct{}, writer chan<- WriterData, inp
 	})
 
 	header := make([]string, len(metrics)+1)
-	header = append(header, []string{"time"}...)
-	header = append(header, metrics...)
+	header[0] = "time"
+	copy(header[1:], metrics)
 	report.Header = header
 	var csvLineCount, xlsLinecount int64
-	for _, s := range slice {
+
+	for k, s := range slice {
+		if k > 0 {
+			report.Header = nil
+		}
 
 		row := make([]string, len(metrics)+1)
 		row[0] = s.time.String()
@@ -229,7 +231,6 @@ func queryTS(report *Report, done chan<- struct{}, writer chan<- WriterData, inp
 			}
 		}
 	}
-
 }
 
 func stringMapToString(m map[string]string, delimiter string) string {
