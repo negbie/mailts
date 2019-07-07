@@ -22,20 +22,13 @@ func usage() {
 
 func main() {
 	var configFile string
-	var useCron bool
 
 	flag.Usage = usage
 	flag.StringVar(&configFile, "config", "example/mailts-prometheus-config.yml", "Path to config file")
-	flag.BoolVar(&useCron, "use_cron", false, "Use Cron")
 	flag.Parse()
 	//flag.Lookup("stderrthreshold").Value.Set("INFO")
 
-	if useCron {
-		// TODO add cron
-	} else {
-		report(configFile)
-	}
-
+	report(configFile)
 	os.Exit(1)
 }
 
@@ -46,7 +39,7 @@ func report(configFile string) {
 	}
 
 	writerDone := make(chan struct{}, 1)
-	input := make(chan WriterData, 2000)
+	input := make(chan WriterData, 100000)
 	go WriterRoutine(writerDone, input)
 
 	reportWorkers := len(config.Report)
